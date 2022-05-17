@@ -118,19 +118,19 @@ plotNormalHistogram(GLEAMorigWKBK$CommodityR)
 # lends itself to distribution
 
 GLEAMorigWKBK$CommodityRsqrt <- sqrt(GLEAMorigWKBK$CommodityR)
-plotNormalHistogram(GLEAMorigWKBK$CommodityRsqrt)
+#plotNormalHistogram(GLEAMorigWKBK$CommodityRsqrt)
 # We have a very nice curve. Let's try log of commodity just to be thorough.
 
-GLEAMorigWKBK$CommodityRlog <- log(GLEAMorigWKBK$CommodityR)
-plotNormalHistogram(GLEAMorigWKBK$CommodityRlog)
+#GLEAMorigWKBK$CommodityRlog <- log(GLEAMorigWKBK$CommodityR)
+#plotNormalHistogram(GLEAMorigWKBK$CommodityRlog)
 # No help from log of commodity.
-GLEAMorigWKBK$RegionR
+#GLEAMorigWKBK$RegionR
   
 GleamCarbon <- na.omit(GLEAMorigWKBK %>% filter('Production system' %in% c("Aggregated", 
 "Grassland systems", "Mixed Systems", "Backyard systems", "Feedlots", "Intermediate systems", "Industrial systems")))
 
-apps <- na.omit(NEWgoogleplaystore %>% filter(Category %in% c("BEAUTY",
-                                    "FOOD_AND_DRINK", "PHOTOGRAPHY")))
+# apps <- na.omit(NEWgoogleplaystore %>% filter(Category %in% c("BEAUTY",
+#                                    "FOOD_AND_DRINK", "PHOTOGRAPHY")))
 
 plotNormalHistogram(GLEAMorigWKBK$`Production system`)
 bartlett.test(`Postfarm, CO2 (kg CO2e)` ~ `Production system`, data=GLEAMorigWKBK )
@@ -152,9 +152,43 @@ Anova(GLEAMnova, Type="II", white.adjust=TRUE)
 # productions systems and post-farm CO2 emission. However, lets do some correction
 # to double check our finding. 
 
-pairwise.t.test(GLEAMorigWKBK$`Postfarm, CO2 (kg CO2e)`, GLEAMorigWKBK$`Production system`, p.adjust="bonferroni", pool.sd = FALSE)
-# We have some significant differences with the pairs meat and milk as well as meat and aggregated. Lets get the means of the
-# matrix. 
+MEATnova <- lm(`Postfarm, CO2 (kg CO2e)` ~ `Commodity`, data=GLEAMorigWKBK )
+Anova(MEATnova, Type="II", white.adjust=TRUE)
+# Another significance code using Commodity and post farm CO2. 
 
-ProdMeans <- GLEAMorigWKBK %>% group_by(`Production system`) %>% summarize(MEANS = mean(`Postfarm, CO2 (kg CO2e)`))
+CH4SpecNova <- lm(`Total CH4 emissions (kg CO2e)` ~ `Animal species`, data=GLEAMorigWKBK)
+Anova(CH4SpecNova, type="II", white.adjust=TRUE)
+# Strong significance code with methane gas total emissions with animal species. 
+
+CH4Specplot <- ggplot(GLEAMorigWKBK, aes(x = `Animal species`, y = `Total CH4 emissions (kg CO2e)`))
+CH4Specplot+ geom_boxplot() + ggtitle("Total Methane Emissions by Species") +
+xlab("Animal Species") + ylab("Total Methane Emissions")
+# Cattle is much higher levels of Methane emissions than the other animal species. 
+
+
+GLEAMorigWKBK$`Production (kg protein)`
+
+SPECIESnova <- lm(`Postfarm, CO2 (kg CO2e)` ~ `Animal species`, data=GLEAMorigWKBK)
+Anova(SPECIESnova, Type="II", white.adjust=TRUE)
+# We have a very significant outcome with the post farm CO2 and species columns! 
+
+SPECIESplot <- ggplot(GLEAMorigWKBK, aes(x =`Animal species` , y = `Postfarm, CO2 (kg CO2e)` ))
+SPECIESplot+ geom_boxplot() + ggtitle("Post farm CO2 by Animal Species") +
+xlab("Animal Species") + ylab("Post Farm CO2 Emissions")
+# Cattle show to have the highest level of post farm CO2 emissions. Let's
+# check out other emissions against animal species.
+
+COMMODITYnova <- lm(`Postfarm, CO2 (kg CO2e)` ~ Commodity, data=GLEAMorigWKBK)
+Anova(COMMODITYnova, Type="II", white.adjust=TRUE)
+# We have a significance code. This is not as significant as Post farm CO2 with
+# animal species. 
+
+CommodityPlot <- ggplot(GLEAMorigWKBK, aes(x = Commodity , y = `Postfarm, CO2 (kg CO2e)`))
+CommodityPlot+ geom_boxplot() + ggtitle("Post farm CO2 by Commodity") +
+xlab("Commodity Type") + ylab("Post Farm CO2 Emissions")
+
+pairwise.t.test(GLEAMorigWKBK$`Production (kg protein)`, GLEAMorigWKBK$`Postfarm, CO2 (kg CO2e)`)
+
+
+ProdMeans <- GLEAMorigWKBK %>% group_by(`Production (kg protein)`) %>% summarize(MEANS = mean(`Postfarm, CO2 (kg CO2e)`))
 CommodityMeans <- GLEAMorigWKBK %>% group_by('Animal Species') %>% summarize(MEANs = mean(`Postfarm, CO2 (kg CO2e)`))
